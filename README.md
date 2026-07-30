@@ -25,7 +25,7 @@ Developmental_state/
 1. **Figure 1.** Location map of the main green hydrogen projects in Magallanes.
 2. **Figure 2.** Institutional heatmap summarising documentary mentions by institution and analytical theme.
 
-The script downloads the official Chilean regional shapefile directly from the Biblioteca del Congreso Nacional and uses Natural Earth for the national inset map. It expects `data_documental.xlsx` to be located in the `data/` folder. fileciteturn9file0
+The script downloads the official Chilean regional shapefile directly from the Biblioteca del Congreso Nacional and uses Natural Earth for the national inset map. It expects `data_documental.xlsx` to be located in the `data/` folder. 
 
 ## Software requirements
 
