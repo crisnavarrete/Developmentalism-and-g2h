@@ -1,4 +1,7 @@
-# I plot 1: map ----
+# Figure 1. Green Hydrogen Projects in Magallanes, Chile
+
+
+if (!require("pacman")) install.packages("pacman")
 
 pacman::p_load(
   sf,
@@ -13,7 +16,9 @@ pacman::p_load(
   devtools
 )
 
-# 1. shapes ----
+# Download BCN regional boundaries
+
+
 temp <- tempdir()
 
 zipfile <- file.path(temp, "Regiones.zip")
@@ -36,11 +41,15 @@ shp <- list.files(
 regions <- st_read(shp, quiet = TRUE)
 
 # Select Magallanes
+
+
 magallanes <- regions |>
   filter(Region == "Región de Magallanes y Antártica Chilena")
 
 
 # Project locations (WGS84)
+
+
 projects <- tibble::tribble(
   ~Project,          ~lon,        ~lat,
   "Haru Oni",        -70.957992,  -52.850535,
@@ -58,11 +67,13 @@ projects_sf <- st_as_sf(
 
 
 # Project to UTM 19S
+
 magallanes_utm <- st_transform(magallanes, 32719)
 projects_utm   <- st_transform(projects_sf, 32719)
 
 
 # Crop map to project extent
+
 bbox <- st_bbox(projects_utm)
 
 bbox["xmin"] <- bbox["xmin"] - 50000
@@ -72,7 +83,8 @@ bbox["ymax"] <- bbox["ymax"] + 70000
 
 mag_crop <- st_crop(magallanes_utm, bbox)
 
-# 2. Main map -----
+# Main map 
+
 main_map <-
   
   ggplot() +
@@ -177,8 +189,8 @@ main_map <-
 
 main_map
 
+# Inset map
 
-# 2. Inset map----
 chile <- ne_countries(
   country = "Chile",
   scale = "large",
@@ -222,11 +234,12 @@ inset <-
     plot.background = element_blank()
   )
 
-# 3. Combine -----
+# Combine
 
 final_map <-
+  
   ggdraw() +
-
+  
   draw_plot(
     main_map,
     x = 0,
@@ -245,97 +258,3 @@ final_map <-
 
 final_map
 
-# II plot 2: heatmap ----
-
-pacman::p_load(
-  tidyverse, haven, ggplot2, labelled, sjlabelled,
-  ggrepel, scales, gapminder, socviz, readxl, dplyr, skimr,
-  lubridate, changepoint, tidyr, forecast, viridis, here, purrr, reshape2,
-  scales, ggbump, ggstream, RColorBrewer, fuzzyjoin, zoo, writexl,
-  patchwork, hrbrthemes, changepoint.np, pheatmap, fmsb, igraph, here)
-
-
-# Load the data
-df <- read_excel(here("data","data_documental.xlsx"))
-
-df <- df %>% 
-  filter(Count >=3) %>% 
-  select(-Count)
-
-
-# 1. Descriptive Statistics ----
-skimr::skim(df)
-
-# 2. Thematic Aggregation ----
-
-df_long <- df %>%
-  pivot_longer(-Institution, names_to = "Action", values_to = "Mention") %>%
-  mutate(Theme = str_extract(Action, "^A\\d+")) %>%
-  group_by(Institution, Theme) %>%
-  summarise(Mentions = sum(Mention, na.rm = TRUE), .groups = "drop")
-
-# View the result
-print(df_long)
-
-df_long %>%
-  group_by(Institution) %>%
-  summarise(TotalMentions = sum(Mentions, na.rm = TRUE)) %>%
-  arrange(desc(TotalMentions))
-
-df_long <- df_long %>%
-  mutate(
-    Theme = factor(Theme),
-    Theme = fct_reorder(Theme, as.numeric(str_remove(Theme, "A")))
-  )
-# Visualization: Bar chart
-ggplot(df_long, aes(x = Theme, y = Mentions, fill = Theme)) +
-  geom_col(show.legend = FALSE) +
-  facet_wrap(~ Institution, scales = "free_y") +
-  theme_minimal() +
-  labs(title = "Theme Mentions per Institution", x = "Theme", y = "Mentions") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-
-# 3. Heatmap ----
-
-# Extract clean numeric theme index
-df_long <- df_long %>%
-  mutate(
-    ThemeNumeric = as.numeric(str_remove(Theme, "A"))
-  )
-
-# Get unique, sorted Theme levels (no duplicates)
-theme_levels <- df_long %>%
-  distinct(Theme, ThemeNumeric) %>%
-  arrange(ThemeNumeric) %>%
-  pull(Theme)
-
-# Institution order by total mentions
-institution_order <- df_long %>%
-  group_by(Institution) %>%
-  summarise(TotalMentions = sum(Mentions, na.rm = TRUE)) %>%
-  arrange(desc(TotalMentions)) %>%
-  pull(Institution)
-
-# Reorder Institution and Theme as factors
-df_long <- df_long %>%
-  mutate(
-    Institution = factor(Institution, levels = rev(institution_order)),  # reverse Y-axis order
-    Theme = factor(Theme, levels = theme_levels)
-  )
-
-# Plot the heatmap
-ggplot(df_long, aes(x = Theme, y = Institution, fill = Mentions)) +
-  geom_tile(color = "white") +
-  scale_fill_viridis() +
-  theme_minimal(base_size = 12) +
-  labs(
-    title = "Mentions Heatmap by Institution and Theme",
-    x = "Theme",
-    y = "Institution",
-    fill = "Mentions"
-  ) +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    panel.grid = element_blank()
-  ) 
