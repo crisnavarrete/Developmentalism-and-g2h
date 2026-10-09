@@ -1,6 +1,6 @@
 # Codebook
 
-This codebook follows Open Science Framework recommendations for documenting datasets by describing variable names, definitions, and allowed values. fileciteturn9file1
+This codebook follows Open Science Framework recommendations for documenting datasets by describing variable names, definitions, and allowed values. 
 
 ## Dataset
 
